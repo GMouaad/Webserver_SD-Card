@@ -26,7 +26,9 @@
 #include <string.h>
 #include "inc/hw_memmap.h"
 #include "driverlib/rom.h"
+#include "driverlib/rom_map.h"
 #include "driverlib/ssi.h"
+#include "driverlib/gpio.h"
 #include "utils/lwiplib.h"
 #include "utils/ustdlib.h"
 #include "httpserver_raw/httpd.h"
@@ -60,6 +62,12 @@ extern uint32_t ui32_LUXMeasData;
 //
 //*****************************************************************************
 static uint32_t ui32TickCounter = 0;
+//*****************************************************************************
+//
+// TODO: Initialize a variable to store the led state
+//
+//*****************************************************************************
+bool ledState = 0;
 
 //*****************************************************************************
 //
@@ -133,6 +141,33 @@ fs_open(const char *pcName)
         psFile->pextension = NULL;
         return (psFile);
     }
+    // TODO: Compare URI here
+    if (ustrncmp(pcName, "/toggle_led", 11) == 0)
+        {
+            char pcBuf[5];
+
+            // TODO: toggle LED depending on the previous state
+            if(!ledState){
+                strcpy(pcBuf, "ON");
+                ledState = 1;
+                MAP_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0,
+                                 (MAP_GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_0) ^
+                                  GPIO_PIN_0));
+            }
+            else{
+                strcpy(pcBuf, "OFF");
+                ledState = 0;
+                MAP_GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0,
+                                 (MAP_GPIOPinRead(GPIO_PORTN_BASE, GPIO_PIN_0) ^
+                                         GPIO_PIN_0));
+            }
+
+            psFile->data = pcBuf;
+            psFile->len = strlen(pcBuf);
+            psFile->index = psFile->len;
+            psFile->pextension = NULL;
+            return (psFile);
+        }
     else
     {
 
